@@ -1,3 +1,5 @@
-all:go99.cc randomgo99.cpp
-	g++ -g2 go99.cc -o go99
-	g++ -g2 randomgo99.cpp -o randomgo99
+all:go99 randomgo99
+	
+go99:MCS_API.cc
+	g++ go99.cc -o go99
+	g++ randomgo99.cpp -o randomgo99
