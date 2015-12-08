@@ -36,7 +36,7 @@
 
 #define LOCALVERSION      1
 #define GTPVERSION        2
- 
+
 using namespace std;
 int _board_size = BOARDSIZE;
 int _board_boundary = BOUNDARYSIZE;
@@ -101,7 +101,7 @@ void count_liberty(int X, int Y, int Board[BOUNDARYSIZE][BOUNDARYSIZE], int Libe
     // Find the same connect component and its liberity
     for (int d = 0 ; d < MAXDIRECTION; ++d) {
 	Liberties[d] = 0;
-	if (Board[X+DirectionX[d]][Y+DirectionY[d]] == BLACK ||  
+	if (Board[X+DirectionX[d]][Y+DirectionY[d]] == BLACK ||
 	    Board[X+DirectionX[d]][Y+DirectionY[d]] == WHITE    ) {
 	    Liberties[d] = find_liberty(X+DirectionX[d], Y+DirectionY[d], d, Board, ConnectBoard);
 	}
@@ -116,7 +116,7 @@ void count_neighboorhood_state(int Board[BOUNDARYSIZE][BOUNDARYSIZE], int X, int
     for (int d = 0 ; d < MAXDIRECTION; ++d) {
 	// check the number of nonempty neighbor
 	switch(Board[X+DirectionX[d]][Y+DirectionY[d]]) {
-	    case EMPTY:    (*empt)++; 
+	    case EMPTY:    (*empt)++;
 			   NeighboorhoodState[d] = EMPTY;
 			   break;
 	    case BLACK:    if (turn == BLACK) {
@@ -145,7 +145,7 @@ void count_neighboorhood_state(int Board[BOUNDARYSIZE][BOUNDARYSIZE], int X, int
 }
 
 /*
- * This function remove the connect component contains (X, Y) with color "turn" 
+ * This function remove the connect component contains (X, Y) with color "turn"
  * And return the number of remove stones.
  * */
 int remove_piece(int Board[BOUNDARYSIZE][BOUNDARYSIZE], int X, int Y, int turn) {
@@ -262,7 +262,7 @@ int gen_legal_move(int Board[BOUNDARYSIZE][BOUNDARYSIZE], int turn, int game_len
     bool eat_move = 0;
     for (int x = 1 ; x <= BOARDSIZE; ++x) {
 	for (int y = 1 ; y <= BOARDSIZE; ++y) {
-	    // check if current 
+	    // check if current
 	    if (Board[x][y] == 0) {
 		// check the liberty of the neighborhood intersections
 		num_neighborhood_self = 0;
@@ -310,7 +310,7 @@ int gen_legal_move(int Board[BOUNDARYSIZE][BOUNDARYSIZE], int turn, int game_len
 			    next_x = x;
 			    next_y = y;
 			}
-		    }	
+		    }
 		    // Case 2.2: Surround by opponent or both side's pieces.
 		    else if (num_neighborhood_oppo > 0) {
 			int check_flag = 0;
@@ -339,7 +339,7 @@ int gen_legal_move(int Board[BOUNDARYSIZE][BOUNDARYSIZE], int turn, int game_len
 				eat_move = 1;
 			    }
 			}
-		    }	
+		    }
 		 }
 		 if (next_x !=0 && next_y !=0) {
 		 // copy the current board to next board
@@ -383,6 +383,14 @@ int gen_legal_move(int Board[BOUNDARYSIZE][BOUNDARYSIZE], int turn, int game_len
     }
     return legal_moves;
 }
+int MCS (int turn, int num_legal_moves, int MoveList[HISTORYLENGTH]){
+	if (num_legal_moves == 0)
+		return 0;
+	int move_id=0;
+
+
+	return MoveList[move_id];
+}
 /*
  * This function randomly selects one move from the MoveList.
  * */
@@ -410,7 +418,7 @@ void do_move(int Board[BOUNDARYSIZE][BOUNDARYSIZE], int turn, int move) {
     }
 
 }
-/* 
+/*
  * This function records the current game baord with current
  * game length "game_length"
  * */
@@ -421,7 +429,7 @@ void record(int Board[BOUNDARYSIZE][BOUNDARYSIZE], int GameRecord[MAXGAMELENGTH]
 		    }
 		}
 }
-/* 
+/*
  * This function randomly generate one legal move (x, y) with return value x*10+y,
  * if there is no legal move the function will return 0.
  * */
@@ -438,8 +446,8 @@ int genmove(int Board[BOUNDARYSIZE][BOUNDARYSIZE], int turn, int time_limit, int
 
     num_legal_moves = gen_legal_move(Board, turn, game_length, GameRecord, MoveList);
 
-    return_move = rand_pick_move(num_legal_moves, MoveList);
-
+    //return_move = rand_pick_move(num_legal_moves, MoveList);
+    return_move = MCS(turn, num_legal_moves, MoveList);
     do_move(Board, turn, return_move);
 
     return return_move % 100;
@@ -476,7 +484,7 @@ double final_score(int Board[BOUNDARYSIZE][BOUNDARYSIZE]) {
     }
     return black - white;
 }
-/* 
+/*
  * Following are commands for Go Text Protocol (GTP)
  *
  * */
@@ -537,7 +545,7 @@ void gtp_showboard(int Board[BOUNDARYSIZE][BOUNDARYSIZE]) {
 	cout << endl;
     }
     cout << "#  ";
-    for (int i = 1; i <=BOARDSIZE; ++i) 
+    for (int i = 1; i <=BOARDSIZE; ++i)
 	cout << LabelX[i] <<" ";
     cout << endl;
     cout << endl;
