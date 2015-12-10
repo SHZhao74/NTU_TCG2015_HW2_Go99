@@ -10,42 +10,8 @@
 #include <cstring>
 #include <cstdlib>
 #include <ctime>
-
-#define BOARDSIZE        9
-#define BOUNDARYSIZE    11
-#define COMMANDLENGTH 1000
-#define DEFAULTTIME     10
-#define DEFAULTKOMI      7
-
-#define MAXGAMELENGTH 1000
-#define MAXSTRING       50
-#define MAXDIRECTION     4
-
-#define NUMINTERSECTION 81
-#define HISTORYLENGTH   200
-
-#define EMPTY            0
-#define BLACK            1
-#define WHITE            2
-#define BOUNDARY         3
-
-#define SELF             1
-#define OPPONENT         2
-
-#define NUMGTPCOMMANDS      15
-
-#define LOCALVERSION      1
-#define GTPVERSION        2
-
+#include "GTP.hpp"
 using namespace std;
-int _board_size = BOARDSIZE;
-int _board_boundary = BOUNDARYSIZE;
-double _komi =  DEFAULTKOMI;
-const int DirectionX[MAXDIRECTION] = {-1, 0, 1, 0};
-const int DirectionY[MAXDIRECTION] = { 0, 1, 0,-1};
-const char LabelX[]="0ABCDEFGHJ";
-
-
 /*
  * This function reset the board, the board intersections are labeled with 0,
  * the boundary intersections are labeled with 3.
@@ -386,7 +352,11 @@ int gen_legal_move(int Board[BOUNDARYSIZE][BOUNDARYSIZE], int turn, int game_len
 int MCS (int turn, int num_legal_moves, int MoveList[HISTORYLENGTH]){
 	if (num_legal_moves == 0)
 		return 0;
-	int move_id=0;
+  else{
+    int move_id=0;
+
+  }
+
 
 
 	return MoveList[move_id];
