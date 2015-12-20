@@ -14,11 +14,16 @@
 #define NUMINTERSECTION 81
 #define HISTORYLENGTH   200
 
-#define EMPTY            0
-#define BLACK            1
-#define WHITE            2
-#define BOUNDARY         3
-
+//#define EMPTY            0
+//#define BLACK            1
+//#define WHITE            2
+//#define BOUNDARY         3
+enum {
+  EMPTY = 0,
+  BLACK = 1,
+  WHITE = 2,
+  BOUNDARY
+};
 #define SELF             1
 #define OPPONENT         2
 

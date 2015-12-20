@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <ctime>
 #include "GTP.hpp"
+#include "MCS.hpp"
 using namespace std;
 /*
  * This function reset the board, the board intersections are labeled with 0,
@@ -18,9 +19,9 @@ using namespace std;
  * */
 void reset(int Board[BOUNDARYSIZE][BOUNDARYSIZE]) {
     for (int i = 1 ; i <= BOARDSIZE; ++i) {
-	for (int j = 1 ; j <= BOARDSIZE; ++j) {
-	    Board[i][j] = EMPTY;
-	}
+	     for (int j = 1 ; j <= BOARDSIZE; ++j) {
+	        Board[i][j] = EMPTY;
+	      }
     }
     for (int i = 0 ; i < BOUNDARYSIZE; ++i) {
 	Board[0][i] = Board[BOUNDARYSIZE-1][i] = Board[i][0] = Board[i][BOUNDARYSIZE-1] = BOUNDARY;
@@ -349,27 +350,16 @@ int gen_legal_move(int Board[BOUNDARYSIZE][BOUNDARYSIZE], int turn, int game_len
     }
     return legal_moves;
 }
-int MCS (int turn, int num_legal_moves, int MoveList[HISTORYLENGTH]){
-	if (num_legal_moves == 0)
-		return 0;
-  else{
-    int move_id=0;
 
-  }
-
-
-
-	return MoveList[move_id];
-}
 /*
  * This function randomly selects one move from the MoveList.
  * */
 int rand_pick_move(int num_legal_moves, int MoveList[HISTORYLENGTH]) {
     if (num_legal_moves == 0)
-	return 0;
+      return 0;
     else {
-	int move_id = rand()%num_legal_moves;
-	return MoveList[move_id];
+      int move_id = rand()%num_legal_moves;
+      return MoveList[move_id];
     }
 }
 /*
@@ -395,7 +385,7 @@ void do_move(int Board[BOUNDARYSIZE][BOUNDARYSIZE], int turn, int move) {
 void record(int Board[BOUNDARYSIZE][BOUNDARYSIZE], int GameRecord[MAXGAMELENGTH][BOUNDARYSIZE][BOUNDARYSIZE], int game_length) {
 		for (int i = 0 ; i < BOUNDARYSIZE; ++i) {
 		    for (int j = 0 ; j < BOUNDARYSIZE; ++j) {
-			GameRecord[game_length][i][j] = Board[i][j];
+          GameRecord[game_length][i][j] = Board[i][j];
 		    }
 		}
 }
@@ -413,11 +403,12 @@ int genmove(int Board[BOUNDARYSIZE][BOUNDARYSIZE], int turn, int time_limit, int
     int MoveList[HISTORYLENGTH];
     int num_legal_moves = 0;
     int return_move = 0;
+    MCSnode root;
 
     num_legal_moves = gen_legal_move(Board, turn, game_length, GameRecord, MoveList);
-
+    //root.genChild(num_legal_moves, MoveList);
     //return_move = rand_pick_move(num_legal_moves, MoveList);
-    return_move = MCS(turn, num_legal_moves, MoveList);
+    return_move = root.UCTSearch(Board, turn, num_legal_moves, MoveList, end_t);
     do_move(Board, turn, return_move);
 
     return return_move % 100;
@@ -477,6 +468,7 @@ const char *KnownCommands[]={
 };
 
 void gtp_final_score(int Board[BOUNDARYSIZE][BOUNDARYSIZE]) {
+
     double result;
     result = final_score(Board);
     result -= _komi;
@@ -586,17 +578,19 @@ void gtp_play(char Color[], char Move[], int Board[BOUNDARYSIZE][BOUNDARYSIZE], 
 }
 void gtp_genmove(int Board[BOUNDARYSIZE][BOUNDARYSIZE], char Color[], int time_limit, int game_length, int GameRecord[MAXGAMELENGTH][BOUNDARYSIZE][BOUNDARYSIZE]){
     int turn = (Color[0]=='b'||Color[0]=='B')?BLACK:WHITE;
+    MCSnode root;
     int move = genmove(Board, turn, time_limit, game_length, GameRecord);
     int move_i, move_j;
     record(Board, GameRecord, game_length+1);
+
     if (move==0) {
-	cout << "= PASS" << endl<< endl<< endl;
+	     cout << "= PASS" << endl<< endl<< endl;
     }
     else {
-	move_i = (move%100)/10;
-	move_j = (move%10);
-//	cerr << "#turn("<<game_length<<"): (move, move_i,move_j)" << turn << ": " << move<< " " << move_i << " " << move_j << endl;
-	cout << "= " << LabelX[move_j]<<10-move_i<<endl<< endl;
+    	move_i = (move%100)/10;
+    	move_j = (move%10);
+    //	cerr << "#turn("<<game_length<<"): (move, move_i,move_j)" << turn << ": " << move<< " " << move_i << " " << move_j << endl;
+    	cout << "= " << LabelX[move_j]<<10-move_i<<endl<< endl;
     }
 }
 /*
@@ -620,78 +614,78 @@ void gtp_main(int display) {
 	gtp_showboard(Board);
     }
     while (gets(Input) != 0) {
-	sscanf(Input, "%s", Command);
-	if (Command[0]== '#')
-	    continue;
+	     sscanf(Input, "%s", Command);
+	      if (Command[0]== '#')
+	       continue;
 
-	if (strcmp(Command, "protocol_version")==0) {
-	    gtp_protocol_version();
-	}
-	else if (strcmp(Command, "name")==0) {
-	    gtp_name();
-	}
-	else if (strcmp(Command, "version")==0) {
-	    gtp_version();
-	}
-	else if (strcmp(Command, "list_commands")==0) {
-	    gtp_list_commands();
-	}
-	else if (strcmp(Command, "known_command")==0) {
-	    sscanf(Input, "known_command %s", Parameter);
-	    gtp_known_command(Parameter);
-	}
-	else if (strcmp(Command, "boardsize")==0) {
-	    sscanf(Input, "boardsize %d", &ivalue);
-	    gtp_boardsize(ivalue);
-	}
-	else if (strcmp(Command, "clear_board")==0) {
-	    gtp_clear_board(Board, NumCapture);
-	    game_length = 0;
-	}
-	else if (strcmp(Command, "komi")==0) {
-	    sscanf(Input, "komi %lf", &dvalue);
-	    gtp_komi(dvalue);
-	}
-	else if (strcmp(Command, "play")==0) {
-	    sscanf(Input, "play %s %s", Color, Move);
-	    gtp_play(Color, Move, Board, game_length, GameRecord);
-	    game_length++;
-	    if (display==1) {
-		gtp_showboard(Board);
-	    }
-	}
-	else if (strcmp(Command, "genmove")==0) {
-	    sscanf(Input, "genmove %s", Color);
-	    gtp_genmove(Board, Color, time_limit, game_length, GameRecord);
-	    game_length++;
-	    if (display==1) {
-		gtp_showboard(Board);
-	    }
-	}
-	else if (strcmp(Command, "quit")==0) {
-	    break;
-	}
-	else if (strcmp(Command, "showboard")==0) {
-	    gtp_showboard(Board);
-	}
-	else if (strcmp(Command, "undo")==0) {
-	    game_length--;
-	    gtp_undo(Board, game_length, GameRecord);
-	    if (display==1) {
-		gtp_showboard(Board);
-	    }
-	}
-	else if (strcmp(Command, "final_score")==0) {
-	    if (display==1) {
-		gtp_showboard(Board);
-	    }
-	    gtp_final_score(Board);
-	}
+    	if (strcmp(Command, "protocol_version")==0) {
+    	    gtp_protocol_version();
+    	}
+    	else if (strcmp(Command, "name")==0) {
+    	    gtp_name();
+    	}
+    	else if (strcmp(Command, "version")==0) {
+    	    gtp_version();
+    	}
+    	else if (strcmp(Command, "list_commands")==0) {
+    	    gtp_list_commands();
+    	}
+    	else if (strcmp(Command, "known_command")==0) {
+    	    sscanf(Input, "known_command %s", Parameter);
+    	    gtp_known_command(Parameter);
+    	}
+    	else if (strcmp(Command, "boardsize")==0) {
+    	    sscanf(Input, "boardsize %d", &ivalue);
+    	    gtp_boardsize(ivalue);
+    	}
+    	else if (strcmp(Command, "clear_board")==0) {
+    	    gtp_clear_board(Board, NumCapture);
+    	    game_length = 0;
+    	}
+    	else if (strcmp(Command, "komi")==0) {
+    	    sscanf(Input, "komi %lf", &dvalue);
+    	    gtp_komi(dvalue);
+    	}
+    	else if (strcmp(Command, "play")==0) {
+    	    sscanf(Input, "play %s %s", Color, Move);
+    	    gtp_play(Color, Move, Board, game_length, GameRecord);
+    	    game_length++;
+    	    if (display==1) {
+    		gtp_showboard(Board);
+    	    }
+    	}
+    	else if (strcmp(Command, "genmove")==0) {
+    	    sscanf(Input, "genmove %s", Color);
+    	    gtp_genmove(Board, Color, time_limit, game_length, GameRecord);
+    	    game_length++;
+    	    if (display==1) {
+    		gtp_showboard(Board);
+    	    }
+    	}
+    	else if (strcmp(Command, "quit")==0) {
+    	    break;
+    	}
+    	else if (strcmp(Command, "showboard")==0) {
+    	    gtp_showboard(Board);
+    	}
+    	else if (strcmp(Command, "undo")==0) {
+    	    game_length--;
+    	    gtp_undo(Board, game_length, GameRecord);
+    	    if (display==1) {
+    		gtp_showboard(Board);
+    	    }
+    	}
+    	else if (strcmp(Command, "final_score")==0) {
+    	    if (display==1) {
+    		gtp_showboard(Board);
+    	    }
+    	    gtp_final_score(Board);
+    	}
     }
 }
 int main(int argc, char* argv[]) {
 //    int type = GTPVERSION;// 1: local version, 2: gtp version
-    int type = GTPVERSION;// 1: local version, 2: gtp version
+    //int type = GTPVERSION;// 1: local version, 2: gtp version
     int display = 0; // 1: display, 2 nodisplay
     if (argc > 1) {
 	if (strcmp(argv[1], "-display")==0) {
