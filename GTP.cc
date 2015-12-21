@@ -10,8 +10,8 @@
 #include <cstring>
 #include <cstdlib>
 #include <ctime>
-#include "GTP.hpp"
-#include "MCS.hpp"
+#include "GTP.h"
+#include "MCS.h"
 using namespace std;
 /*
  * This function reset the board, the board intersections are labeled with 0,
@@ -28,103 +28,7 @@ void reset(int Board[BOUNDARYSIZE][BOUNDARYSIZE]) {
     }
 }
 
-/*
- * This function return the total number of liberity of the string of (X, Y) and
- * the string will be label with 'label'.
- * */
-int find_liberty(int X, int Y, int label, int Board[BOUNDARYSIZE][BOUNDARYSIZE], int ConnectBoard[BOUNDARYSIZE][BOUNDARYSIZE]) {
-    // Label the current intersection
-    ConnectBoard[X][Y] |= label;
-    int total_liberty = 0;
-    for (int d = 0 ; d < MAXDIRECTION; ++d) {
-	// Check this intersection has been visited or not
-	if ((ConnectBoard[X+DirectionX[d]][Y+DirectionY[d]] & (1<<label) )!= 0) continue;
 
-	// Check this intersection is not visited yet
-	ConnectBoard[X+DirectionX[d]][Y+DirectionY[d]] |=(1<<label);
-	// This neighboorhood is empty
-	if (Board[X+DirectionX[d]][Y+DirectionY[d]] == EMPTY){
-	    total_liberty++;
-	}
-	// This neighboorhood is self stone
-	else if (Board[X+DirectionX[d]][Y+DirectionY[d]] == Board[X][Y]) {
-	    total_liberty += find_liberty(X+DirectionX[d], Y+DirectionY[d], label, Board, ConnectBoard);
-	}
-    }
-    return total_liberty;
-}
-
-/*
- * This function count the liberties of the given intersection's neighboorhod
- * */
-void count_liberty(int X, int Y, int Board[BOUNDARYSIZE][BOUNDARYSIZE], int Liberties[MAXDIRECTION]) {
-    int ConnectBoard[BOUNDARYSIZE][BOUNDARYSIZE];
-    // Initial the ConnectBoard
-    for (int i = 0 ; i < BOUNDARYSIZE; ++i) {
-	for (int j = 0 ; j < BOUNDARYSIZE; ++j) {
-	    ConnectBoard[i][j] = 0;
-	}
-    }
-    // Find the same connect component and its liberity
-    for (int d = 0 ; d < MAXDIRECTION; ++d) {
-	Liberties[d] = 0;
-	if (Board[X+DirectionX[d]][Y+DirectionY[d]] == BLACK ||
-	    Board[X+DirectionX[d]][Y+DirectionY[d]] == WHITE    ) {
-	    Liberties[d] = find_liberty(X+DirectionX[d], Y+DirectionY[d], d, Board, ConnectBoard);
-	}
-    }
-}
-
-/*
- * This function count the number of empty, self, opponent, and boundary intersections of the neighboorhod
- * and saves the type in NeighboorhoodState.
- * */
-void count_neighboorhood_state(int Board[BOUNDARYSIZE][BOUNDARYSIZE], int X, int Y, int turn, int* empt, int* self, int* oppo ,int* boun, int NeighboorhoodState[MAXDIRECTION]) {
-    for (int d = 0 ; d < MAXDIRECTION; ++d) {
-	// check the number of nonempty neighbor
-	switch(Board[X+DirectionX[d]][Y+DirectionY[d]]) {
-	    case EMPTY:    (*empt)++;
-			   NeighboorhoodState[d] = EMPTY;
-			   break;
-	    case BLACK:    if (turn == BLACK) {
-			       (*self)++;
-			       NeighboorhoodState[d] = SELF;
-			   }
-			   else {
-			       (*oppo)++;
-			       NeighboorhoodState[d] = OPPONENT;
-			   }
-			   break;
-	    case WHITE:    if (turn == WHITE) {
-			       (*self)++;
-			       NeighboorhoodState[d] = SELF;
-			   }
-			   else {
-			       (*oppo)++;
-			       NeighboorhoodState[d] = OPPONENT;
-			   }
-			   break;
-	    case BOUNDARY: (*boun)++;
-			   NeighboorhoodState[d] = BOUNDARY;
-			   break;
-	}
-    }
-}
-
-/*
- * This function remove the connect component contains (X, Y) with color "turn"
- * And return the number of remove stones.
- * */
-int remove_piece(int Board[BOUNDARYSIZE][BOUNDARYSIZE], int X, int Y, int turn) {
-    int remove_stones = (Board[X][Y]==EMPTY)?0:1;
-    Board[X][Y] = EMPTY;
-    for (int d = 0; d < MAXDIRECTION; ++d) {
-	if (Board[X+DirectionX[d]][Y+DirectionY[d]] == turn) {
-	    remove_stones += remove_piece(Board, X+DirectionX[d], Y+DirectionY[d], turn);
-	}
-    }
-    return remove_stones;
-}
 /*
  * This function update Board with place turn's piece at (X,Y).
  * Note that this function will not check if (X, Y) is a legal move or not.
@@ -153,64 +57,7 @@ void update_board(int Board[BOUNDARYSIZE][BOUNDARYSIZE], int X, int Y, int turn)
     }
     Board[X][Y] = turn;
 }
-/*
- * This function update Board with place turn's piece at (X,Y).
- * Note that this function will check if (X, Y) is a legal move or not.
- * */
-int update_board_check(int Board[BOUNDARYSIZE][BOUNDARYSIZE], int X, int Y, int turn) {
-    // Check the given coordination is legal or not
-    if ( X < 1 || X > BOARDSIZE || Y < 1 || Y > BOARDSIZE || Board[X][Y]!=EMPTY)
-	return 0;
-    int num_neighborhood_self = 0;
-    int num_neighborhood_oppo = 0;
-    int num_neighborhood_empt = 0;
-    int num_neighborhood_boun = 0;
-    int Liberties[4];
-    int NeighboorhoodState[4];
-    count_neighboorhood_state(Board, X, Y, turn,
-	    &num_neighborhood_empt,
-	    &num_neighborhood_self,
-	    &num_neighborhood_oppo,
-	    &num_neighborhood_boun, NeighboorhoodState);
-    // Check if the move is a legal move
-    // Condition 1: there is a empty intersection in the neighboorhood
-    int legal_flag = 0;
-    count_liberty(X, Y, Board, Liberties);
-    if (num_neighborhood_empt != 0) {
-	legal_flag = 1;
-    }
-    else {
-	// Condition 2: there is a self string has more than one liberty
-	for (int d = 0; d < MAXDIRECTION; ++d) {
-	    if (NeighboorhoodState[d] == SELF && Liberties[d] > 1) {
-		legal_flag = 1;
-	    }
-	}
-	if (legal_flag == 0) {
-	// Condition 3: there is a opponent string has exactly one liberty
-	    for (int d = 0; d < MAXDIRECTION; ++d) {
-		if (NeighboorhoodState[d] == OPPONENT && Liberties[d] == 1) {
-		    legal_flag = 1;
-		}
-	    }
-	}
-    }
 
-    if (legal_flag == 1) {
-    // check if there is opponent piece in the neighboorhood
-	if (num_neighborhood_oppo != 0) {
-	    for (int d = 0 ; d < MAXDIRECTION; ++d) {
-		// check if there is opponent component only one liberty
-		if (NeighboorhoodState[d] == OPPONENT && Liberties[d] == 1 && Board[X+DirectionX[d]][Y+DirectionY[d]]!=EMPTY) {
-		    remove_piece(Board, X+DirectionX[d], Y+DirectionY[d], Board[X+DirectionX[d]][Y+DirectionY[d]]);
-		}
-	    }
-	}
-	Board[X][Y] = turn;
-    }
-
-    return (legal_flag==1)?1:0;
-}
 
 /*
  * This function return the number of legal moves with clor "turn" and
@@ -352,17 +199,6 @@ int gen_legal_move(int Board[BOUNDARYSIZE][BOUNDARYSIZE], int turn, int game_len
 }
 
 /*
- * This function randomly selects one move from the MoveList.
- * */
-int rand_pick_move(int num_legal_moves, int MoveList[HISTORYLENGTH]) {
-    if (num_legal_moves == 0)
-      return 0;
-    else {
-      int move_id = rand()%num_legal_moves;
-      return MoveList[move_id];
-    }
-}
-/*
  * This function update the Board with put 'turn' at (x,y)
  * where x = (move % 100) / 10 and y = move % 10.
  * Note this function will not check 'move' is legal or not.
@@ -394,7 +230,7 @@ void record(int Board[BOUNDARYSIZE][BOUNDARYSIZE], int GameRecord[MAXGAMELENGTH]
  * if there is no legal move the function will return 0.
  * */
 int genmove(int Board[BOUNDARYSIZE][BOUNDARYSIZE], int turn, int time_limit, int game_length, int GameRecord[MAXGAMELENGTH][BOUNDARYSIZE][BOUNDARYSIZE]) {
-    clock_t start_t, end_t, now_t;
+    clock_t start_t, end_t;
     // record start time
     start_t = clock();
     // calculate the time bound
@@ -403,12 +239,10 @@ int genmove(int Board[BOUNDARYSIZE][BOUNDARYSIZE], int turn, int time_limit, int
     int MoveList[HISTORYLENGTH];
     int num_legal_moves = 0;
     int return_move = 0;
-    MCSnode root;
-
     num_legal_moves = gen_legal_move(Board, turn, game_length, GameRecord, MoveList);
-    //root.genChild(num_legal_moves, MoveList);
-    //return_move = rand_pick_move(num_legal_moves, MoveList);
-    return_move = root.UCTSearch(Board, turn, num_legal_moves, MoveList, end_t);
+    MCSnode root(turn, Board, num_legal_moves, MoveList);  
+
+    return_move = root.UCTSearch(end_t);
     do_move(Board, turn, return_move);
 
     return return_move % 100;
@@ -578,7 +412,7 @@ void gtp_play(char Color[], char Move[], int Board[BOUNDARYSIZE][BOUNDARYSIZE], 
 }
 void gtp_genmove(int Board[BOUNDARYSIZE][BOUNDARYSIZE], char Color[], int time_limit, int game_length, int GameRecord[MAXGAMELENGTH][BOUNDARYSIZE][BOUNDARYSIZE]){
     int turn = (Color[0]=='b'||Color[0]=='B')?BLACK:WHITE;
-    MCSnode root;
+    //MCSnode root;
     int move = genmove(Board, turn, time_limit, game_length, GameRecord);
     int move_i, move_j;
     record(Board, GameRecord, game_length+1);
@@ -610,8 +444,8 @@ void gtp_main(int display) {
     int GameRecord[MAXGAMELENGTH][BOUNDARYSIZE][BOUNDARYSIZE]={{{0}}};
     int game_length = 0;
     if (display==1) {
-	gtp_list_commands();
-	gtp_showboard(Board);
+    	gtp_list_commands();
+    	gtp_showboard(Board);
     }
     while (gets(Input) != 0) {
 	     sscanf(Input, "%s", Command);
@@ -682,19 +516,4 @@ void gtp_main(int display) {
     	    gtp_final_score(Board);
     	}
     }
-}
-int main(int argc, char* argv[]) {
-//    int type = GTPVERSION;// 1: local version, 2: gtp version
-    //int type = GTPVERSION;// 1: local version, 2: gtp version
-    int display = 0; // 1: display, 2 nodisplay
-    if (argc > 1) {
-	if (strcmp(argv[1], "-display")==0) {
-	    display = 1;
-	}
-	if (strcmp(argv[1], "-nodisplay")==0) {
-	    display = 0;
-	}
-    }
-    gtp_main(display);
-    return 0;
 }
