@@ -2,8 +2,8 @@ CC = g++ -Wall
 #-stdlib=libstdc++
 all:MCS GTP go99 randomgo99
 
-MCS:MCS.h MCS.cc
-	$(CC) -c MCS.cc
+#MCS:MCS.h MCS.cc
+#	$(CC) -c MCS.h
 
 GTP:GTP.h GTP.cc
 	$(CC) -c GTP.cc
