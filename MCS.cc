@@ -13,8 +13,9 @@ MCSnode::MCSnode(int& t,int b[BOUNDARYSIZE][BOUNDARYSIZE], int& numLegalMove, in
 	child = NULL;
 	sibling=NULL;
 	moved_cnt=0;
+	num_play_parent = numLegalMove;
 	setBoard(b);
-	setLegalMove(numLegalMove);
+	//setLegalMove(numLegalMove);
 }
 MCSnode::MCSnode(int t, int numLegalMove, int& moveId, int& move, MCSnode* parent){
 	wins=total=0;
