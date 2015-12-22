@@ -1,9 +1,11 @@
 #ifndef MCS_H
 #define MCS_H
+#include <iostream>
+#include <stdio.h>
 #include <ctime>
 #include "GTP.h"
 double c_wight = 0.44;
-
+using namespace std;
 class MCSnode{
 public:
   MCSnode(int& t,int b[BOUNDARYSIZE][BOUNDARYSIZE], int& numLegalMove, int* MoveList); //root

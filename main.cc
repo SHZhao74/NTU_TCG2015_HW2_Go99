@@ -1,4 +1,4 @@
-#include "GTP.h"
+#include "./GTP.h"
 #include <cstring>
 
 

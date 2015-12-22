@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stdlib.h>
 #include <iostream>
 #include "MCS.h"
 using namespace std;
@@ -153,7 +154,7 @@ int MCSnode::simulation(){
 }
 
 int simCnt=0;
-int MCSnode::UCTSearch(clock_t end_t){
+int MCSnode::UCTSearch(unsigned long end_t){
 	if (num_legal_moves == 0)
 		return 0;
 	else{
